@@ -99,12 +99,63 @@
 
 ### Database Hosting
 
-- **Supabase** (Recommended for MVP)
-  - PostgreSQL hosting
-  - Free tier: 500MB database
-  - Built-in REST API (optional)
+- **Supabase** (Recommended for MVP) - **PostgreSQL ONLY**
+  - ✅ PostgreSQL database hosting (this is what we use)
+  - ✅ Free tier: 500MB database
+  - ✅ Connection pooling
+  - ✅ Auto-backups
+  - ❌ NOT using: Supabase Auth (using custom simple auth)
+  - ❌ NOT using: Supabase Storage (using Cloudinary)
+  - ❌ NOT using: Supabase REST API (using Next.js API routes)
+  - ❌ NOT using: Supabase Realtime (not needed for MVP)
 
-  Alternative: **Neon**, **PlanetScale**, or **Railway**
+  **We're only using Supabase as a PostgreSQL database provider!**
+
+  Alternative: **Neon**, **Railway**, **PlanetScale** (all PostgreSQL providers)
+
+---
+
+## 📦 Services & What We're Using
+
+This section clarifies exactly what we're using from each service:
+
+### Supabase
+**Purpose:** PostgreSQL database hosting ONLY
+- ✅ Database hosting
+- ✅ Connection string to connect via Prisma
+- ❌ NOT using any other Supabase features (auth, storage, realtime, etc.)
+
+### Cloudinary
+**Purpose:** File storage for logos, images, and media
+- ✅ Image uploads
+- ✅ Image optimization
+- ✅ CDN delivery
+- All user-uploaded files go here
+
+### Vercel
+**Purpose:** Application hosting
+- ✅ Next.js deployment
+- ✅ Serverless API routes
+- ✅ Frontend hosting
+- ✅ Edge network
+
+### Prisma
+**Purpose:** Database ORM
+- ✅ Type-safe database queries
+- ✅ Schema management
+- ✅ Migrations
+- Connects to Supabase PostgreSQL database
+
+**Architecture Summary:**
+```
+Next.js App (Vercel)
+    ↓
+Prisma ORM
+    ↓
+PostgreSQL Database (Supabase)
+
+User Files → Cloudinary → URLs stored in PostgreSQL
+```
 
 ---
 
@@ -136,8 +187,12 @@
 ┌─────────────┐      ┌─────────────┐    ┌──────────────┐
 │ PostgreSQL  │      │ Cloudinary  │    │ Email Service│
 │  Database   │      │ File Storage│    │  (Optional)  │
-│  (Prisma)   │      │             │    │              │
+│ (Supabase)  │      │   (Images)  │    │   (Resend)   │
+│   + Prisma  │      │             │    │              │
 └─────────────┘      └─────────────┘    └──────────────┘
+
+Note: Supabase is ONLY used for PostgreSQL database hosting.
+      All other features (auth, storage, realtime) are NOT used.
 ```
 
 ### Data Flow
@@ -787,15 +842,28 @@ export async function checkAdminAuth(req: Request): Promise<boolean> {
 **Tasks:**
 1. Initialize Next.js project with TypeScript
 2. Setup Tailwind CSS and Shadcn/ui
-3. Configure Prisma with PostgreSQL
-4. Setup Cloudinary account and config
-5. Create directory structure
-6. Setup environment variables
-7. Initialize Git repository
+3. Setup Supabase account and create PostgreSQL database
+4. Configure Prisma with Supabase PostgreSQL connection string
+5. Setup Cloudinary account for file storage
+6. Create directory structure
+7. Setup environment variables (.env.local)
+8. Initialize Git repository
+
+**Supabase Setup (PostgreSQL Only):**
+```bash
+# 1. Go to supabase.com and create free account
+# 2. Create new project (choose name, password, region)
+# 3. Wait for project to be ready (~2 minutes)
+# 4. Go to Project Settings → Database
+# 5. Copy "Connection string" under "Connection pooling"
+# 6. Paste into .env.local as DATABASE_URL
+# 7. Done! Ignore all other Supabase features
+```
 
 **Deliverables:**
 - Running Next.js app
-- Database connection established
+- PostgreSQL database connection established (via Supabase)
+- Cloudinary configured for file uploads
 - Development environment ready
 
 ---
@@ -982,15 +1050,27 @@ function validateFile(file: File, type: 'image' | 'document') {
 ### Environment Variables
 ```bash
 # .env.local
-DATABASE_URL="postgresql://..."
-CLOUDINARY_CLOUD_NAME="..."
-CLOUDINARY_API_KEY="..."
-CLOUDINARY_API_SECRET="..."
+
+# Database - Supabase PostgreSQL connection string
+DATABASE_URL="postgresql://postgres:[password]@db.[project-ref].supabase.co:5432/postgres"
+
+# File Storage - Cloudinary credentials
+CLOUDINARY_CLOUD_NAME="your-cloud-name"
+CLOUDINARY_API_KEY="your-api-key"
+CLOUDINARY_API_SECRET="your-api-secret"
+
+# Admin Authentication - Simple password (custom, not Supabase Auth)
 ADMIN_PASSWORD="secure-random-password"
+
+# App URL
 NEXT_PUBLIC_APP_URL="http://localhost:3000"
 
 # Email (optional)
 RESEND_API_KEY="..."
+
+# NOTE: We're only using Supabase for PostgreSQL database
+# No Supabase Auth keys needed
+# No Supabase Storage keys needed
 ```
 
 ### CORS & CSP
@@ -1015,7 +1095,7 @@ const nextConfig = {
 
 ## 🌐 Deployment Strategy
 
-### Recommended: Vercel + Supabase
+### Recommended: Vercel + Supabase (PostgreSQL Only)
 
 **Why Vercel:**
 - Zero-config Next.js deployment
@@ -1025,20 +1105,27 @@ const nextConfig = {
 - Preview deployments for branches
 - Free tier: Unlimited sites
 
-**Why Supabase:**
-- PostgreSQL hosting
+**Why Supabase (for PostgreSQL):**
+- PostgreSQL database hosting
 - Free tier: 500MB database
 - Auto-backups
 - Connection pooling
-- Dashboard for DB management
+- Database dashboard for management
+- **Note:** We're ONLY using the PostgreSQL database, not auth/storage/realtime
 
 ### Deployment Steps
 
-1. **Setup Supabase:**
+1. **Setup Supabase PostgreSQL Database:**
    ```bash
-   # Create project on supabase.com
-   # Get database URL
-   # Add to environment variables
+   # 1. Create account at supabase.com
+   # 2. Create new project
+   # 3. Go to Project Settings → Database
+   # 4. Copy "Connection string" (use Connection Pooling mode)
+   # 5. Format: postgresql://postgres:[password]@db.[project-ref].supabase.co:5432/postgres
+   # 6. Add to environment variables as DATABASE_URL
+
+   # That's it! We're only using the PostgreSQL database
+   # Ignore all other Supabase features (Auth, Storage, etc.)
    ```
 
 2. **Setup Cloudinary:**
@@ -1338,6 +1425,40 @@ For questions during development:
 2. Review Next.js documentation
 3. Check Prisma documentation
 4. Consult component library docs
+
+---
+
+## 🎯 Quick Reference: Service Usage
+
+**Important clarification on what we're using:**
+
+| Service | What We Use | What We DON'T Use |
+|---------|-------------|-------------------|
+| **Supabase** | ✅ PostgreSQL database only | ❌ Auth, Storage, Realtime, Edge Functions |
+| **Cloudinary** | ✅ File storage & optimization | - |
+| **Vercel** | ✅ Next.js hosting & deployment | - |
+| **Prisma** | ✅ Database ORM | - |
+| **Next.js** | ✅ Full framework (frontend + API) | - |
+
+**Connection Flow:**
+```
+Your Code (Next.js)
+    ↓
+Prisma ORM
+    ↓
+PostgreSQL Database (hosted on Supabase)
+
+User Files → Cloudinary (separate from Supabase)
+```
+
+**Environment Variables You Need:**
+1. `DATABASE_URL` - Supabase PostgreSQL connection string
+2. `CLOUDINARY_CLOUD_NAME` - From Cloudinary dashboard
+3. `CLOUDINARY_API_KEY` - From Cloudinary dashboard
+4. `CLOUDINARY_API_SECRET` - From Cloudinary dashboard
+5. `ADMIN_PASSWORD` - Custom password you create
+
+**No Supabase API keys needed** because we're only using the PostgreSQL database via standard PostgreSQL connection string!
 
 ---
 
