@@ -1,8 +1,37 @@
 # Thinker - Fortune 500 Website Request System
 
 **Version:** 1.0.0
-**Status:** Planning Phase
+**Status:** Phase 1 Complete - Development Ready
 **Last Updated:** 2025-11-16
+
+---
+
+## 🚀 Quick Start
+
+Ready to get started? Follow the [SETUP.md](./SETUP.md) guide to set up your local development environment.
+
+```bash
+# Clone the repository
+git clone https://github.com/Jayesh1512/Thinker.git
+cd Thinker
+
+# Install dependencies
+npm install
+
+# Setup environment variables
+cp .env.example .env.local
+# Edit .env.local with your credentials
+
+# Run migrations
+npm run prisma:migrate
+
+# Start development server
+npm run dev
+```
+
+Visit [http://localhost:3000](http://localhost:3000) to see the app!
+
+📖 **Full setup instructions:** [SETUP.md](./SETUP.md)
 
 ---
 

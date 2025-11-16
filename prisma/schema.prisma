@@ -1,0 +1,223 @@
+// Prisma Schema for Thinker - Website Request System
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// Enums
+enum RequestStatus {
+  PENDING
+  IN_PROGRESS
+  COMPLETED
+  CANCELLED
+}
+
+enum Priority {
+  HIGH
+  MEDIUM
+  LOW
+}
+
+enum SectionType {
+  HERO
+  ABOUT
+  SERVICES
+  FEATURES
+  TEAM
+  TESTIMONIALS
+  GALLERY
+  CONTACT
+  CTA
+  CUSTOM
+}
+
+// Main Request Model
+model Request {
+  id            String         @id @default(cuid())
+  trackingId    String         @unique
+  status        RequestStatus  @default(PENDING)
+  priority      Priority       @default(MEDIUM)
+  templateUsed  String?        // corporate, portfolio, restaurant, etc.
+
+  createdAt     DateTime       @default(now())
+  updatedAt     DateTime       @updatedAt
+  completedAt   DateTime?
+
+  adminNotes    String?        @db.Text
+
+  // Relations
+  projectData   ProjectData?
+  branding      Branding?
+  colorScheme   ColorScheme?
+  sections      Section[]
+  navigation    Navigation?
+  businessInfo  BusinessInfo?
+  seoMetadata   SeoMetadata?
+  inspirations  Inspiration[]
+  mediaAssets   MediaAsset[]
+
+  @@index([status])
+  @@index([createdAt])
+  @@index([trackingId])
+}
+
+// Project Basic Data
+model ProjectData {
+  id              String   @id @default(cuid())
+  requestId       String   @unique
+  request         Request  @relation(fields: [requestId], references: [id], onDelete: Cascade)
+
+  projectName     String
+  websiteTitle    String
+  tagline         String?
+  industry        String?
+  targetAudience  String?
+  description     String?  @db.Text
+
+  submitterName   String?
+  submitterEmail  String?
+
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+}
+
+// Branding Assets
+model Branding {
+  id                String   @id @default(cuid())
+  requestId         String   @unique
+  request           Request  @relation(fields: [requestId], references: [id], onDelete: Cascade)
+
+  primaryLogoUrl    String?
+  alternateLogoUrl  String?
+  faviconUrl        String?
+  brandGuidelinesUrl String?
+
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+}
+
+// Color Scheme
+model ColorScheme {
+  id                String   @id @default(cuid())
+  requestId         String   @unique
+  request           Request  @relation(fields: [requestId], references: [id], onDelete: Cascade)
+
+  primaryColor      String?
+  secondaryColor    String?
+  accentColor       String?
+  backgroundLight   String?
+  backgroundDark    String?
+  textPrimary       String?
+  textSecondary     String?
+  presetTheme       String?
+
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+}
+
+// Sections
+model Section {
+  id              String      @id @default(cuid())
+  requestId       String
+  request         Request     @relation(fields: [requestId], references: [id], onDelete: Cascade)
+
+  orderIndex      Int
+  sectionType     SectionType
+  title           String?
+  subtitle        String?
+  content         Json?       // Flexible JSON for section content
+  layout          String?
+  backgroundStyle String?
+  isVisible       Boolean     @default(true)
+
+  createdAt       DateTime    @default(now())
+  updatedAt       DateTime    @updatedAt
+
+  @@index([requestId, orderIndex])
+}
+
+// Navigation
+model Navigation {
+  id            String   @id @default(cuid())
+  requestId     String   @unique
+  request       Request  @relation(fields: [requestId], references: [id], onDelete: Cascade)
+
+  menuItems     Json?    // Array of menu items
+  footerContent Json?    // Footer data
+
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+}
+
+// Business Information
+model BusinessInfo {
+  id            String   @id @default(cuid())
+  requestId     String   @unique
+  request       Request  @relation(fields: [requestId], references: [id], onDelete: Cascade)
+
+  email         String?
+  phone         String?
+  address       String?
+  hours         String?
+  socialLinks   Json?    // Object with social media links
+
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+}
+
+// SEO Metadata
+model SeoMetadata {
+  id              String   @id @default(cuid())
+  requestId       String   @unique
+  request         Request  @relation(fields: [requestId], references: [id], onDelete: Cascade)
+
+  metaTitle       String?
+  metaDescription String?  @db.Text
+  keywords        String?
+  ogImageUrl      String?
+
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+}
+
+// Inspiration Websites
+model Inspiration {
+  id            String   @id @default(cuid())
+  requestId     String
+  request       Request  @relation(fields: [requestId], references: [id], onDelete: Cascade)
+
+  websiteUrl    String
+  notes         String?  @db.Text
+  screenshotUrl String?
+
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  @@index([requestId])
+}
+
+// Media Assets
+model MediaAsset {
+  id          String   @id @default(cuid())
+  requestId   String
+  request     Request  @relation(fields: [requestId], references: [id], onDelete: Cascade)
+
+  assetType   String   // logo, image, video, document
+  fileUrl     String
+  fileName    String?
+  fileSize    Int?
+  mimeType    String?
+  altText     String?
+  description String?
+  sectionId   String?  // Optional link to specific section
+
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([requestId])
+}
